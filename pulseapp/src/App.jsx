@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import OpenAI from 'openai';
 const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
+const GEMINI_URL = import.meta.env.VITE_GEMINI_URL
 
 function App() {
   const [loading, setLoading] = useState(false)
@@ -10,9 +11,9 @@ function App() {
 
 
   const handleLoading = async () => {
-    const videoId = extractVideoId(input)
-    setLoading(true)
-    const comments = await fetchComments(videoId)
+  const videoId = extractVideoId(input)
+  setLoading(true)
+  const comments = await fetchComments(videoId)
   setData(comments)
   setLoading(false)
   setInput('')
@@ -32,6 +33,26 @@ function App() {
     return result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
   }
 
+  //connect google gemini ai 
+  const payload = {
+    "contents": [{
+        "parts": [{ "text": "which of these comments are negative ones and why? : " + data}]
+      }]
+    }
+
+  const askQuestion = async () => {
+    console.log('button being clicked')
+    let res = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
+      method: "POST",
+      body: JSON.stringify(payload )
+    })
+    res = await res.json()
+    console.log(res.candidates[0].content.parts[0])
+  }
+
+
+  
+
 
   return (
     <>
@@ -48,6 +69,7 @@ function App() {
 
         <div>
           <div className='flex mt-15'>
+            <button onClick={askQuestion}>hiii</button>
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
               {data.map((comment, idx) => (
                <div key={idx} className="mb-4">
