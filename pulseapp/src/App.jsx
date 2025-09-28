@@ -27,7 +27,7 @@ function App() {
 
   const fetchComments = async (videoId) => {
     console.log(YOUTUBE_API_KEY)
-    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=5&key=${YOUTUBE_API_KEY}`
+    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=25&key=${YOUTUBE_API_KEY}`
     const response = await fetch(url)
     const result = await response.json()
     return result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
@@ -36,7 +36,7 @@ function App() {
   //connect google gemini ai 
   const payload = {
     "contents": [{
-        "parts": [{ "text": "which of these comments are negative ones and why? : " + data}]
+        "parts": [{ "text": "Analyze the positive comments and summarise all them with detail but not more than 4 lines and do the same for negative ones as well and put W in front of positive summary and L next to negative summary. Remove asteriks or any other specaial characters including the inverted commas." + data}]
       }]
     }
 
@@ -44,13 +44,32 @@ function App() {
     console.log('button being clicked')
     let res = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
       method: "POST",
-      body: JSON.stringify(payload )
+      body: JSON.stringify(payload)
     })
     res = await res.json()
-    console.log(res.candidates[0].content.parts[0])
+    const analysis = res.candidates[0].content.parts[0].text
+    // const wComments = await getWComments(analysis)
+    console.log(analysis)
+    const { wTexts, lTexts } = extractCategories(analysis);
+    console.log('W--> ' + wTexts)
+    console.log('L--> ' + lTexts)
   }
 
+const extractCategories = (analysis) => {
+  // Split the analysis into lines
+  const lines = analysis.split('\n').map(line => line.trim()).filter(Boolean);
 
+  // Get W (positive) and L (negative) summaries
+  const wTexts = lines
+    .filter(line => line.startsWith('W:'))
+    .map(line => line.replace(/^W:\s*/, ''));
+
+  const lTexts = lines
+    .filter(line => line.startsWith('L:'))
+    .map(line => line.replace(/^L:\s*/, ''));
+
+  return { wTexts, lTexts };
+}
   
 
 
@@ -66,7 +85,6 @@ function App() {
         {loading ? <div>
           <svg className='w-12 h-12' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><radialGradient id="a12" cx=".66" fx=".66" cy=".3125" fy=".3125" gradientTransform="scale(1.5)"><stop offset="0" stopColor="#FFD54F"></stop><stop offset=".3" stopColor="#FFD54F" stopOpacity=".9"></stop><stop offset=".6" stopColor="#FFD54F" stopOpacity=".6"></stop><stop offset=".8" stopColor="#FFD54F" stopOpacity=".3"></stop><stop offset="1" stopColor="#FFD54F" stopOpacity="0"></stop></radialGradient><circle transformOrigin="center" fill="none" stroke="url(#a12)" strokeWidth="15" strokeLinecap="round" strokeDasharray="200 1000" strokeDashoffset="0" cx="100" cy="100" r="70"><animateTransform type="rotate" attributeName="transform" calcMode="spline" dur="2" values="360;0" keyTimes="0;1" keySplines="0 0 1 1" repeatCount="indefinite"></animateTransform></circle><circle transformOrigin="center" fill="none" opacity=".2" stroke="#FFD54F" strokeWidth="15" strokeLinecap="round" cx="100" cy="100" r="70"></circle></svg>
         </div> : <></>}
-
         <div>
           <div className='flex mt-15'>
             <button onClick={askQuestion}>hiii</button>
