@@ -8,6 +8,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [input, setInput] = useState('')
   const [data, setData] = useState([])
+  const [wComment, setWComment] = useState('');
+  const [lComment, setLComment] = useState('')
 
 
   const handleLoading = async () => {
@@ -15,6 +17,7 @@ function App() {
   setLoading(true)
   const comments = await fetchComments(videoId)
   setData(comments)
+
   setLoading(false)
   setInput('')
   setLoading(false)
@@ -27,7 +30,7 @@ function App() {
 
   const fetchComments = async (videoId) => {
     console.log(YOUTUBE_API_KEY)
-    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=25&key=${YOUTUBE_API_KEY}`
+    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=5&key=${YOUTUBE_API_KEY}`
     const response = await fetch(url)
     const result = await response.json()
     return result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
@@ -40,7 +43,7 @@ function App() {
       }]
     }
 
-  const askQuestion = async () => {
+  const runAnaylsis = async () => {
     console.log('button being clicked')
     let res = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
       method: "POST",
@@ -49,10 +52,9 @@ function App() {
     res = await res.json()
     const analysis = res.candidates[0].content.parts[0].text
     // const wComments = await getWComments(analysis)
-    console.log(analysis)
-    const { wTexts, lTexts } = extractCategories(analysis);
-    console.log('W--> ' + wTexts)
-    console.log('L--> ' + lTexts)
+    extractCategories(analysis);
+    console.log('W--> ' + wComment)
+    console.log('L--> ' + lComment)
   }
 
 const extractCategories = (analysis) => {
@@ -60,15 +62,13 @@ const extractCategories = (analysis) => {
   const lines = analysis.split('\n').map(line => line.trim()).filter(Boolean);
 
   // Get W (positive) and L (negative) summaries
-  const wTexts = lines
+  setWComment = lines
     .filter(line => line.startsWith('W:'))
     .map(line => line.replace(/^W:\s*/, ''));
 
-  const lTexts = lines
+  setLComment = lines
     .filter(line => line.startsWith('L:'))
     .map(line => line.replace(/^L:\s*/, ''));
-
-  return { wTexts, lTexts };
 }
   
 
@@ -87,23 +87,22 @@ const extractCategories = (analysis) => {
         </div> : <></>}
         <div>
           <div className='flex mt-15'>
-            <button onClick={askQuestion}>hiii</button>
+            {/* <button onClick={askQuestion}>hiii</button> */}
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
-              {data.map((comment, idx) => (
-               <div key={idx} className="mb-4">
-    <p className="font-bold">Comment:</p>
-    <p>{comment}</p>
+
+               <div className="mb-4">
+    <p className="font-bold">W:</p>
+    <p>{wComment}</p>
   </div>
-              ))}
             </div>
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
-              <p>
-                Lorem ipsum dolor sit amet,  consecdfdfdfdfdfftetur consecdfdfdfdfdfftetur consecdfdfdfdfdfftetur adipisicidfdfddfdng elit. Nam magni dolore doloribus alias nemo ut recusandae aut, excepturi dolorem fugiat nisi praesentium maiores quidem architecto est mollitia? Officiis, saepe quos.
-              </p>
             </div><div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
+              <div className="mb-4">
+    <p className="font-bold">L:</p>
               <p>
-                Lorem ipsum dolor sit amet, consecdfdfdfdfdfftetur adipisicidfdfddfdng elit. Nam magni dolore doloribus alias nemo ut recusandae aut, excepturi dolorem fugiat nisi praesentium maiores quidem architecto est mollitia? Officiis, saepe quos.
+                {lComment}
               </p>
+              </div>
             </div>
           </div>
         </div>
