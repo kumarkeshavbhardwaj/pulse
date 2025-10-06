@@ -62,13 +62,13 @@ const extractCategories = (analysis) => {
   const lines = analysis.split('\n').map(line => line.trim()).filter(Boolean);
 
   // Get W (positive) and L (negative) summaries
-  setWComment = lines
+  setWComment(lines
     .filter(line => line.startsWith('W:'))
-    .map(line => line.replace(/^W:\s*/, ''));
+    .map(line => line.replace(/^W:\s*/, '')));
 
-  setLComment = lines
+  setLComment (lines
     .filter(line => line.startsWith('L:'))
-    .map(line => line.replace(/^L:\s*/, ''));
+    .map(line => line.replace(/^L:\s*/, '')));
 }
   
 
