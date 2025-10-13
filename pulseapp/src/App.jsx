@@ -5,22 +5,24 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 const GEMINI_URL = import.meta.env.VITE_GEMINI_URL
 
 function App() {
+
+
   const [loading, setLoading] = useState(false)
   const [input, setInput] = useState('')
   const [data, setData] = useState([])
-  const [wComment, setWComment] = useState('');
-  const [lComment, setLComment] = useState('')
+  const [majComment, setMajComment] = useState('')
+  const [minComment, setMinComment] = useState('')
+  const [oddComment, setOddComment] = useState('')
+
 
 
   const handleLoading = async () => {
   const videoId = extractVideoId(input)
   setLoading(true)
-  const comments = await fetchComments(videoId)
-  setData(comments)
-
+  await fetchComments(videoId)
+  // runAnaylsis()
   setLoading(false)
   setInput('')
-  setLoading(false)
   }
 
   const extractVideoId = (url) => {
@@ -29,47 +31,70 @@ function App() {
   }
 
   const fetchComments = async (videoId) => {
+    console.log('fetch comments init')
     console.log(YOUTUBE_API_KEY)
-    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=5&key=${YOUTUBE_API_KEY}`
+    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=50&key=${YOUTUBE_API_KEY}`
     const response = await fetch(url)
     const result = await response.json()
-    return result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
+    const com = await result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
+    setData(com)
+    console.log(`com - ${com}`)
+    console.log(`data - ${data}`)
+
   }
 
+   useEffect(() => {
+     if (data.length > 0) {
+    runAnaylsis();
+  }
+  console.log('Updated data:', data)
+}, [data])
+
   //connect google gemini ai 
-  const payload = {
+  const majPayload = {
     "contents": [{
-        "parts": [{ "text": "Analyze the positive comments and summarise all them with detail but not more than 4 lines and do the same for negative ones as well and put W in front of positive summary and L next to negative summary. Remove asteriks or any other specaial characters including the inverted commas." + data}]
+        "parts": [{ "text": "You are an expert social media analyst. Analyze the following YouTube comments and Identify and summarize the **majority opinion** — what most of the comments convey or what they mean within 4 lines and also do not use any special character in your response including asterisk. Also remember do not quote the comment as it is, please summarise it in the best way possible. " + data}]
+      }]
+    }
+
+     const minPayload = {
+    "contents": [{
+        "parts": [{ "text": "You are an expert social media analyst. Analyze the following YouTube comments and Identify and summarize the **minority opinion** — the less common but noticeable viewpoint within 4 lines and also do not use any special character in your response including asteriskm. Also remember do not quote the comment as it is, please summarise it in the best way possible. " + data}]
+      }]
+    }
+    
+    const oddPayload = {
+      "contents": [{
+        "parts": [{ "text": "You are an expert social media analyst. Analyze the following YouTube comments and Identify and summarize **weird or unique takes** within 4 lines and also do not use any special character in your response including asterisk. Also remember do not quote the comment as it is, please summarise it in the best way possible. " + data}]
       }]
     }
 
   const runAnaylsis = async () => {
-    console.log('button being clicked')
-    let res = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
+    console.log('run analysis init')
+    let majRes = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
       method: "POST",
-      body: JSON.stringify(payload)
+      body: JSON.stringify(majPayload)
     })
-    res = await res.json()
-    const analysis = res.candidates[0].content.parts[0].text
-    // const wComments = await getWComments(analysis)
-    extractCategories(analysis);
-    console.log('W--> ' + wComment)
-    console.log('L--> ' + lComment)
+    majRes = await majRes.json()
+    setMajComment(majRes.candidates[0].content.parts[0].text)
+
+    let minRes = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
+      method: "POST",
+      body: JSON.stringify(minPayload)
+    })
+    minRes = await minRes.json()
+    setMinComment(minRes.candidates[0].content.parts[0].text)
+
+    let oddRes = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
+      method: "POST",
+      body: JSON.stringify(oddPayload)
+    })
+    oddRes = await oddRes.json()
+    setOddComment(oddRes.candidates[0].content.parts[0].text)
+
   }
 
-const extractCategories = (analysis) => {
-  // Split the analysis into lines
-  const lines = analysis.split('\n').map(line => line.trim()).filter(Boolean);
 
-  // Get W (positive) and L (negative) summaries
-  setWComment(lines
-    .filter(line => line.startsWith('W:'))
-    .map(line => line.replace(/^W:\s*/, '')));
-
-  setLComment (lines
-    .filter(line => line.startsWith('L:'))
-    .map(line => line.replace(/^L:\s*/, '')));
-}
   
 
 
@@ -91,17 +116,23 @@ const extractCategories = (analysis) => {
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
 
                <div className="mb-4">
-    <p className="font-bold">W:</p>
-    <p>{wComment}</p>
+    <p className="font-bold">What majority thinks: </p>
+    <p>{majComment}</p>
   </div>
             </div>
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
+                  <p className="font-bold">What minority thinks:</p>
+                  <p>
+                {minComment}
+              </p>
+
             </div><div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
               <div className="mb-4">
-    <p className="font-bold">L:</p>
-              <p>
-                {lComment}
+    <p className="font-bold">Weird take:</p>
+    <p>
+                {oddComment}
               </p>
+              
               </div>
             </div>
           </div>
