@@ -14,12 +14,14 @@ function App() {
   const [oddComment, setOddComment] = useState('')
 
   const handleLoading = async () => {
+    if(input!=='') {
   const videoId = extractVideoId(input)
   setLoading(true)
   await fetchComments(videoId)
   // runAnaylsis()
   setLoading(false)
   setInput('')
+   } 
   }
 
   const extractVideoId = (url) => {
@@ -103,7 +105,7 @@ function App() {
 
   return (
     <>
-      <div className='flex flex-col justify-center items-center'>
+      <div className='min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 flex flex-col items-center'>
         <div>
           <form onSubmit={e => { e.preventDefault(); handleLoading(); }} className='flex  mt-30 mb-15 justify-center'>
             <input onChange={e => setInput(e.target.value)} value={input} placeholder='Paste youtube video link...' className='text-2xl mx-5  border-4 rounded-full p-4 border-amber-300 h-15 w-[800px]' />
@@ -119,19 +121,19 @@ function App() {
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
 
                <div className="mb-4">
-    <p className="font-bold">What majority thinks: </p>
+    <p className="font-bold">Popular opinions: </p>
     <p>{majComment}</p>
   </div>
             </div>
             <div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
-                  <p className="font-bold">What minority thinks:</p>
+                  <p className="font-bold">Unpopular opinions: </p>
                   <p>
                 {minComment}
               </p>
 
             </div><div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
               <div className="mb-4">
-              <p className="font-bold">Weird take:</p>
+              <p className="font-bold">Weird opinions:</p>
               <p>
                 {oddComment}
               </p>
