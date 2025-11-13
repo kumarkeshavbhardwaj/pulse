@@ -6,15 +6,12 @@ const GEMINI_URL = import.meta.env.VITE_GEMINI_URL
 
 function App() {
 
-
   const [loading, setLoading] = useState(false)
   const [input, setInput] = useState('')
   const [data, setData] = useState([])
   const [majComment, setMajComment] = useState('')
   const [minComment, setMinComment] = useState('')
   const [oddComment, setOddComment] = useState('')
-
-
 
   const handleLoading = async () => {
   const videoId = extractVideoId(input)
@@ -26,8 +23,19 @@ function App() {
   }
 
   const extractVideoId = (url) => {
+
+
+    //if url type is video=? or 
+    if(url.startsWith('https://youtu.be')){
+    const parts = url.split('/')
+    console.log(parts)
+    return parts[parts.length-1]
+    } else {
     const parts = url.split('=')
     return parts[parts.length - 1]
+    }
+    // https://youtu.be/ix9cRaBkVe0
+   
   }
 
   const fetchComments = async (videoId) => {
@@ -40,7 +48,6 @@ function App() {
     setData(com)
     console.log(`com - ${com}`)
     console.log(`data - ${data}`)
-
   }
 
    useEffect(() => {
@@ -94,10 +101,6 @@ function App() {
 
   }
 
-
-  
-
-
   return (
     <>
       <div className='flex flex-col justify-center items-center'>
@@ -128,11 +131,10 @@ function App() {
 
             </div><div className='mx-5 p-4 rounded-xl align-middle h-3xl w-[300px] bg-amber-300 text-black'>
               <div className="mb-4">
-    <p className="font-bold">Weird take:</p>
-    <p>
+              <p className="font-bold">Weird take:</p>
+              <p>
                 {oddComment}
               </p>
-              
               </div>
             </div>
           </div>
