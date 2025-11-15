@@ -16,7 +16,6 @@ function App() {
   const handleLoading = async () => {
     if(input!=='') {
   const videoId = extractVideoId(input)
-  setLoading(true)
   await fetchComments(videoId)
   // runAnaylsis()
   setLoading(false)
@@ -26,37 +25,46 @@ function App() {
 
   const extractVideoId = (url) => {
 
+try { 
+    setLoading(true)
 
-    //if url type is video=? or 
+      //if url type is video=? or 
     if(url.startsWith('https://youtu.be')){
     const parts = url.split('/')
     console.log(parts)
     return parts[parts.length-1]
-    } else {
+    } else if(url.startsWith('https://www.youtube.com/')) {
     const parts = url.split('=')
     return parts[parts.length - 1]
+    } else {
+      alert('Please enter a valid youtube url')
+      setLoading(false)
     }
-    // https://youtu.be/ix9cRaBkVe0
-   
-  }
+    // https://youtu.be/ix9cRaBkVe07
+} catch (error) {
+  alert(error)
+  console.log(error)
+  setLoading(false)
+}
+}
 
   const fetchComments = async (videoId) => {
-    console.log('fetch comments init')
-    console.log(YOUTUBE_API_KEY)
+    try {
     const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=50&key=${YOUTUBE_API_KEY}`
     const response = await fetch(url)
     const result = await response.json()
     const com = await result.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
     setData(com)
-    console.log(`com - ${com}`)
-    console.log(`data - ${data}`)
+    } catch (error) {
+      setLoading(false)
+      alert(`error: ` + error)
+    }
   }
 
    useEffect(() => {
      if (data.length > 0) {
     runAnaylsis();
   }
-  console.log('Updated data:', data)
 }, [data])
 
   //connect google gemini ai 
@@ -79,7 +87,6 @@ function App() {
     }
 
   const runAnaylsis = async () => {
-    console.log('run analysis init')
     let majRes = await fetch(GEMINI_URL+'?key='+GEMINI_API_KEY, {
       method: "POST",
       body: JSON.stringify(majPayload)
@@ -100,7 +107,6 @@ function App() {
     })
     oddRes = await oddRes.json()
     setOddComment(oddRes.candidates[0].content.parts[0].text)
-
   }
 
   return (
